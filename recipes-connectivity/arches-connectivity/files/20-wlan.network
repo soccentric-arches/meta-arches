@@ -1,0 +1,13 @@
+[Match]
+# Matches WiFi interfaces from M.2 Key E WiFi cards (e.g. Intel AX200/AX210)
+# Interface names: wlan0, wlp*, wlx*
+Name=wlan* wlp* wlx*
+
+[Network]
+DHCP=yes
+IPv6AcceptRA=yes
+# wpa_supplicant@wlan0.service manages authentication
+IgnoreCarrierLoss=3s
+
+[DHCPv4]
+RouteMetric=200

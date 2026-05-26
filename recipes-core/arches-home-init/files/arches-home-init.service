@@ -1,0 +1,16 @@
+[Unit]
+Description=Arches OS: Initialise /home partition on first boot
+Documentation=https://github.com/SiliconCentric/Arches-OS
+# Must run after /home is mounted from the persistent home partition.
+After=local-fs.target
+Before=getty.target sshd.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/lib/arches-home-init/arches-home-init.sh
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
