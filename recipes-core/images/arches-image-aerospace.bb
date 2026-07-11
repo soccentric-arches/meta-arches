@@ -1,20 +1,11 @@
-SUMMARY = "Arches Aerospace image"
-DESCRIPTION = "Arches (NVIDIA Jetson) Aerospace image — arches-image base (A/B OTA via SWUpdate, gRPC/Protobuf, hardware interface tools, arches user) plus Aerospace-specific packages."
+SUMMARY = "Arches Aerospace & Avionics image"
+DESCRIPTION = "Arches (NVIDIA Jetson) Aerospace & Avionics image — the complete arches-image base (A/B OTA via SWUpdate, arches-connectivity, gRPC/Protobuf, hardware interface tools, arches user) plus the shared arches-image-common completeness layer (SSH server, debug tools, full command-line + build environment, monitoring, Python toolchain) and Aerospace & Avionics-specific packages."
 LICENSE = "MIT"
 
-# Build on the complete Arches base image rather than a bare core image, so
-# every domain variant is a full image (OTA, connectivity, gRPC, hw tools).
+# Build on the complete Arches base image, then layer the shared completeness
+# set (see arches-image-common.inc), then add only Aerospace & Avionics-specific packages.
 require recipes-core/images/arches-image.bb
+require recipes-core/images/arches-image-common.inc
 
-# --- Aerospace-specific packages (verified present in the included Yocto layers) ---
-IMAGE_INSTALL:append = " \
-    gpsd \
-    linuxptp \
-    ptpd \
-    can-utils \
-    python3-can \
-    socat \
-    strongswan \
-    htop \
-    tmux \
-"
+# --- Aerospace & Avionics-specific packages (verified present in the included Yocto layers) ---
+IMAGE_INSTALL:append = " gpsd linuxptp ptpd can-utils python3-can strongswan openvpn wireguard-tools keepalived v4l-utils fio stress-ng"
