@@ -4,6 +4,10 @@ LICENSE = "MIT"
 
 inherit packagegroup
 
+# This group depends on packages whose RPM output names are dynamically
+# renamed, so it cannot be shared as an allarch package.
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
 RDEPENDS:${PN} = " \
     mosquitto \
     paho-mqtt-c \

@@ -7,6 +7,9 @@ inherit deploy
 do_deploy() {
     install -d ${DEPLOYDIR}/extlinux
     install -m 0644 ${B}/extlinux.conf ${DEPLOYDIR}/extlinux/extlinux.conf
+    if [ -n "${ARCHES_EXTLINUX_APPEND}" ]; then
+        printf '\n%s\n' "${ARCHES_EXTLINUX_APPEND}" >> ${DEPLOYDIR}/extlinux/extlinux.conf
+    fi
     if [ -f "${B}/initrd" ]; then
         install -m 0644 ${B}/initrd ${DEPLOYDIR}/initrd
     fi

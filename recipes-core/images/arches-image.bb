@@ -10,6 +10,7 @@ IMAGE_INSTALL:append = " \
     ${@bb.utils.contains('ARCHES_MIDDLEWARE', '1', 'packagegroup-arches-middleware', '', d)} \
     ${@bb.utils.contains('ARCHES_CLOUD', '1', 'packagegroup-arches-cloud', '', d)} \
     ${@bb.utils.contains('ARCHES_DEBUG', '1', 'packagegroup-arches-debug', '', d)} \
+    ${@bb.utils.contains('ARCHES_SDK_SUPPORT', '1', 'packagegroup-arches-sdk', '', d)} \
 "
 
 # OTA via SWUpdate — A/B rootfs slot switching, web UI on :8080
@@ -115,6 +116,15 @@ inherit extrausers
 
 ARCHES_USER_PASSWORD_HASH ?= "!"
 ARCHES_SSH_AUTHORIZED_KEYS ?= ""
+ARCHES_SWUPDATE_PUBLIC_KEY ?= ""
+
+python __anonymous() {
+    if d.getVar("ARCHES_SECURE_BOOT") == "1":
+        if not d.getVar("ARCHES_SWUPDATE_PUBLIC_KEY"):
+            bb.fatal("ARCHES_SECURE_BOOT=1 requires ARCHES_SWUPDATE_PUBLIC_KEY")
+        if not os.path.isfile(d.getVar("ARCHES_SWUPDATE_PUBLIC_KEY")):
+            bb.fatal("SWUpdate public key does not exist: %s" % d.getVar("ARCHES_SWUPDATE_PUBLIC_KEY"))
+}
 
 EXTRA_USERS_PARAMS = "\
     useradd -m -s /bin/bash -G sudo arches; \
@@ -135,3 +145,13 @@ arches_install_authorized_keys() {
 }
 
 ROOTFS_POSTPROCESS_COMMAND += "arches_install_authorized_keys;"
+
+arches_install_swupdate_key() {
+    if [ "${ARCHES_SECURE_BOOT}" = "1" ]; then
+        install -d -m 0755 ${IMAGE_ROOTFS}/etc/swupdate
+        install -m 0644 "${ARCHES_SWUPDATE_PUBLIC_KEY}" \
+            ${IMAGE_ROOTFS}/etc/swupdate/swupdate-public.pem
+    fi
+}
+
+ROOTFS_POSTPROCESS_COMMAND += "arches_install_swupdate_key;"

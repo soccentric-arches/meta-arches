@@ -1,8 +1,8 @@
 [Unit]
 Description=SWUpdate boot verification (active slot confirmation)
 Documentation=https://sbabic.github.io/swupdate/
-After=local-fs.target
-DefaultDependencies=no
+After=local-fs.target systemd-remount-fs.service
+Before=multi-user.target
 
 [Service]
 Type=oneshot

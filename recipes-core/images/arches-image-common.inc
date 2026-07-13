@@ -37,7 +37,12 @@ IMAGE_INSTALL:append = " \
 
 # SSH server + debug tools on every variant (the base image does not enable
 # an SSH server; this is the one base-level feature the domain variants add).
-IMAGE_FEATURES:append = " ssh-server-openssh tools-debug"
+IMAGE_FEATURES:append = " ssh-server-openssh tools-debug ptest-pkgs"
+
+# Export development, source, profiling, and validation support to both SDK
+# variants while retaining the same target package composition as the image.
+SDKIMAGE_FEATURES:append = " dev-pkgs dbg-pkgs src-pkgs"
+TOOLCHAIN_TARGET_TASK:append = " packagegroup-arches-sdk"
 
 # --- Full command-line + native build environment ----------------------------
 IMAGE_INSTALL:append = " \
