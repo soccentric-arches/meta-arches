@@ -8,4 +8,10 @@ require recipes-core/images/arches-image.bb
 require recipes-core/images/arches-image-common.inc
 
 # --- Consumer Electronics & Multimedia-specific packages (verified present in the included Yocto layers) ---
-IMAGE_INSTALL:append = " gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-rtsp-server alsa-utils alsa-plugins pulseaudio pipewire ffmpeg v4l-utils sox lame libvpx libtheora gst-examples opencv"
+IMAGE_INSTALL:append = " \
+	gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+	gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav \
+	gstreamer1.0-rtsp-server alsa-utils alsa-plugins pulseaudio pipewire \
+	ffmpeg v4l-utils sox lame libvpx libtheora gst-examples opencv \
+	mosquitto paho-mqtt-c python3-paho-mqtt bluez5 \
+"

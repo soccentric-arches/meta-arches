@@ -8,4 +8,9 @@ require recipes-core/images/arches-image.bb
 require recipes-core/images/arches-image-common.inc
 
 # --- Telecom & Communications-specific packages (verified present in the included Yocto layers) ---
-IMAGE_INSTALL:append = " frr openl2tp ptpd linuxptp net-snmp strongswan openvpn keepalived miniupnpd radvd lighttpd"
+IMAGE_INSTALL:append = " \
+	frr openl2tp ptpd linuxptp net-snmp \
+	strongswan openvpn keepalived miniupnpd radvd lighttpd \
+	mosquitto paho-mqtt-c python3-paho-mqtt can-utils \
+	iperf3 tcpdump \
+"

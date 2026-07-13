@@ -8,4 +8,11 @@ require recipes-core/images/arches-image.bb
 require recipes-core/images/arches-image-common.inc
 
 # --- Medical Devices & Healthcare-specific packages (verified present in the included Yocto layers) ---
-IMAGE_INSTALL:append = " gpsd linuxptp ptpd python3-flask strongswan openvpn open62541 mosquitto paho-mqtt-c python3-paho-mqtt libmodbus python3-pymodbus libcoap"
+IMAGE_INSTALL:append = " \
+	gpsd linuxptp ptpd python3-flask \
+	strongswan openvpn open62541 \
+	mosquitto paho-mqtt-c python3-paho-mqtt \
+	libmodbus python3-pymodbus libcoap \
+	v4l-utils opencv gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+	alsa-utils \
+"

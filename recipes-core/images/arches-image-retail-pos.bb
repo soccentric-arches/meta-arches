@@ -8,4 +8,10 @@ require recipes-core/images/arches-image.bb
 require recipes-core/images/arches-image-common.inc
 
 # --- Retail & Point of Sale-specific packages (verified present in the included Yocto layers) ---
-IMAGE_INSTALL:append = " python3-flask lighttpd dnsmasq open62541 libmodbus python3-pymodbus mosquitto paho-mqtt-c python3-paho-mqtt"
+IMAGE_INSTALL:append = " \
+	python3-flask lighttpd dnsmasq \
+	open62541 libmodbus python3-pymodbus \
+	mosquitto paho-mqtt-c python3-paho-mqtt \
+	sqlite3 bluez5 usbutils v4l-utils \
+	cups \
+"

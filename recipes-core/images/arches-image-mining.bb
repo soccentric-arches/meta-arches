@@ -8,4 +8,9 @@ require recipes-core/images/arches-image.bb
 require recipes-core/images/arches-image-common.inc
 
 # --- Mining & Heavy Industry-specific packages (verified present in the included Yocto layers) ---
-IMAGE_INSTALL:append = " mosquitto paho-mqtt-c python3-paho-mqtt libmodbus can-utils python3-can gpsd fio stress-ng iperf3 open62541 libcoap"
+IMAGE_INSTALL:append = " \
+	mosquitto paho-mqtt-c python3-paho-mqtt \
+	libmodbus can-utils python3-can gpsd \
+	linuxptp ptpd open62541 libcoap \
+	v4l-utils opencv fio stress-ng iperf3 \
+"

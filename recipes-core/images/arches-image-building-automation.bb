@@ -8,4 +8,9 @@ require recipes-core/images/arches-image.bb
 require recipes-core/images/arches-image-common.inc
 
 # --- Building Automation & HVAC-specific packages (verified present in the included Yocto layers) ---
-IMAGE_INSTALL:append = " mosquitto paho-mqtt-c python3-paho-mqtt libcoap open62541 libmodbus python3-pymodbus python3-flask lighttpd"
+IMAGE_INSTALL:append = " \
+	mosquitto paho-mqtt-c python3-paho-mqtt \
+	libcoap open62541 libmodbus python3-pymodbus \
+	python3-flask lighttpd bluez5 wpa-supplicant \
+	can-utils python3-can linuxptp \
+"

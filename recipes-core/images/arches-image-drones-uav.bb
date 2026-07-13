@@ -8,4 +8,10 @@ require recipes-core/images/arches-image.bb
 require recipes-core/images/arches-image-common.inc
 
 # --- Drones & UAV-specific packages (verified present in the included Yocto layers) ---
-IMAGE_INSTALL:append = " gpsd linuxptp ptpd can-utils python3-can opencv gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav v4l-utils mosquitto paho-mqtt-c python3-paho-mqtt fio stress-ng"
+IMAGE_INSTALL:append = " \
+	gpsd linuxptp ptpd can-utils python3-can \
+	opencv gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+	gstreamer1.0-libav v4l-utils libiio bluez5 \
+	mosquitto paho-mqtt-c python3-paho-mqtt \
+	strongswan openvpn fio stress-ng \
+"

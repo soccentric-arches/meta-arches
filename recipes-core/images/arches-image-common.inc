@@ -23,6 +23,18 @@
 # No networkmanager/connman here — the base uses systemd-networkd via
 # arches-connectivity and a second active network manager would conflict.
 
+# --- Production runtime foundation ------------------------------------------
+# These packages provide the expected recovery, storage, identity, time,
+# logging, and service-management primitives on every domain image.
+IMAGE_INSTALL:append = " \
+    dbus libpam shadow shadow-base \
+    kmod udev util-linux \
+    e2fsprogs e2fsprogs-resize2fs dosfstools parted \
+    tzdata \
+    systemd-analyze \
+    logrotate rsyslog \
+"
+
 # SSH server + debug tools on every variant (the base image does not enable
 # an SSH server; this is the one base-level feature the domain variants add).
 IMAGE_FEATURES:append = " ssh-server-openssh tools-debug"

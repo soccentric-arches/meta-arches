@@ -8,4 +8,9 @@ require recipes-core/images/arches-image.bb
 require recipes-core/images/arches-image-common.inc
 
 # --- Oil & Gas-specific packages (verified present in the included Yocto layers) ---
-IMAGE_INSTALL:append = " mosquitto paho-mqtt-c python3-paho-mqtt libmodbus python3-pymodbus open62541 libcoap gpsd linuxptp ptpd strongswan openvpn"
+IMAGE_INSTALL:append = " \
+	mosquitto paho-mqtt-c python3-paho-mqtt \
+	libmodbus python3-pymodbus open62541 libcoap \
+	gpsd linuxptp ptpd can-utils python3-can \
+	strongswan openvpn v4l-utils opencv fio stress-ng \
+"

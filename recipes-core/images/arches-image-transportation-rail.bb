@@ -8,4 +8,9 @@ require recipes-core/images/arches-image.bb
 require recipes-core/images/arches-image-common.inc
 
 # --- Transportation & Rail-specific packages (verified present in the included Yocto layers) ---
-IMAGE_INSTALL:append = " can-utils python3-can linuxptp ptpd mosquitto paho-mqtt-c python3-paho-mqtt libmodbus python3-pymodbus open62541 gpsd"
+IMAGE_INSTALL:append = " \
+	can-utils python3-can linuxptp ptpd gpsd \
+	mosquitto paho-mqtt-c python3-paho-mqtt \
+	libmodbus python3-pymodbus open62541 \
+	strongswan openvpn v4l-utils opencv \
+"

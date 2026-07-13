@@ -4,6 +4,14 @@ LICENSE     = "MIT"
 
 require recipes-core/images/core-image-base.bb
 
+# Optional product profiles are controlled from kas/common.yaml. The package
+# groups keep image composition explicit and make SDK contents reproducible.
+IMAGE_INSTALL:append = " \
+    ${@bb.utils.contains('ARCHES_MIDDLEWARE', '1', 'packagegroup-arches-middleware', '', d)} \
+    ${@bb.utils.contains('ARCHES_CLOUD', '1', 'packagegroup-arches-cloud', '', d)} \
+    ${@bb.utils.contains('ARCHES_DEBUG', '1', 'packagegroup-arches-debug', '', d)} \
+"
+
 # OTA via SWUpdate — A/B rootfs slot switching, web UI on :8080
 IMAGE_INSTALL:append = " \
     swupdate \
@@ -100,10 +108,30 @@ IMAGE_INSTALL:append = " \
     python3-periphery \
 "
 
-# Add local user 'arches' with password 'arches' and sudo access
+# Add the local service/operator user with sudo access. The account is locked by
+# default so production images do not ship with a shared password. A deployment
+# can provide ARCHES_USER_PASSWORD_HASH through its distro or machine config.
 inherit extrausers
+
+ARCHES_USER_PASSWORD_HASH ?= "!"
+ARCHES_SSH_AUTHORIZED_KEYS ?= ""
 
 EXTRA_USERS_PARAMS = "\
     useradd -m -s /bin/bash -G sudo arches; \
-    usermod -p '\$6\$S4A8.AjcC/35XUuw\$RmUXpzhNIoZFmLYCwk7tJT1Lonm2bqf/xalVqQD54i2mKwIB.wf9i1tCJsY1ND8gCBvyhiF6oi2jZBAOIV7wD/' arches; \
+    usermod -p '${ARCHES_USER_PASSWORD_HASH}' arches; \
+    usermod -L root; \
 "
+
+# Install deployment-provided operator keys without baking a shared credential
+# into the image. Keys are newline-separated when supplied through machine or
+# distro configuration.
+arches_install_authorized_keys() {
+    if [ -n "${ARCHES_SSH_AUTHORIZED_KEYS}" ]; then
+        install -d -m 0700 ${IMAGE_ROOTFS}/home/arches/.ssh
+        printf '%s\n' "${ARCHES_SSH_AUTHORIZED_KEYS}" > ${IMAGE_ROOTFS}/home/arches/.ssh/authorized_keys
+        chmod 0600 ${IMAGE_ROOTFS}/home/arches/.ssh/authorized_keys
+        chown -R arches:arches ${IMAGE_ROOTFS}/home/arches/.ssh
+    fi
+}
+
+ROOTFS_POSTPROCESS_COMMAND += "arches_install_authorized_keys;"

@@ -8,4 +8,9 @@ require recipes-core/images/arches-image.bb
 require recipes-core/images/arches-image-common.inc
 
 # --- Networking & Routers-specific packages (verified present in the included Yocto layers) ---
-IMAGE_INSTALL:append = " frr openl2tp hostapd dnsmasq radvd miniupnpd keepalived lighttpd rpcbind nfs-utils cifs-utils wireguard-tools strongswan openvpn ptpd linuxptp net-snmp bridge-utils vlan bind"
+IMAGE_INSTALL:append = " \
+	frr openl2tp hostapd dnsmasq radvd miniupnpd keepalived \
+	lighttpd rpcbind nfs-utils cifs-utils wireguard-tools \
+	strongswan openvpn ptpd linuxptp net-snmp bridge-utils vlan bind \
+	mosquitto paho-mqtt-c python3-paho-mqtt can-utils \
+"

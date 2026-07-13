@@ -8,4 +8,9 @@ require recipes-core/images/arches-image.bb
 require recipes-core/images/arches-image-common.inc
 
 # --- Automotive & Vehicle-specific packages (verified present in the included Yocto layers) ---
-IMAGE_INSTALL:append = " can-utils python3-can linuxptp ptpd gpsd v4l-utils fio stress-ng iperf3"
+IMAGE_INSTALL:append = " \
+	can-utils python3-can linuxptp ptpd gpsd \
+	v4l-utils opencv gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+	mosquitto paho-mqtt-c python3-paho-mqtt \
+	fio stress-ng iperf3 \
+"

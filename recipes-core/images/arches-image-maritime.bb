@@ -8,4 +8,9 @@ require recipes-core/images/arches-image.bb
 require recipes-core/images/arches-image-common.inc
 
 # --- Maritime & Marine Electronics-specific packages (verified present in the included Yocto layers) ---
-IMAGE_INSTALL:append = " gpsd linuxptp ptpd mosquitto paho-mqtt-c python3-paho-mqtt can-utils python3-can strongswan openvpn libcoap"
+IMAGE_INSTALL:append = " \
+	gpsd linuxptp ptpd can-utils python3-can \
+	mosquitto paho-mqtt-c python3-paho-mqtt \
+	strongswan openvpn libcoap v4l-utils opencv \
+	gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+"

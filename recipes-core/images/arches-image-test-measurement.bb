@@ -8,4 +8,9 @@ require recipes-core/images/arches-image.bb
 require recipes-core/images/arches-image-common.inc
 
 # --- Test & Measurement-specific packages (verified present in the included Yocto layers) ---
-IMAGE_INSTALL:append = " gpsd iperf3 netperf fio stress-ng bonnie++ iozone3 v4l-utils can-utils python3-can"
+IMAGE_INSTALL:append = " \
+	gpsd iperf3 netperf fio stress-ng bonnie++ iozone3 \
+	v4l-utils can-utils python3-can \
+	linuxptp ptpd ethtool strace ltrace \
+	libiio opencv \
+"

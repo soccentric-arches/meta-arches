@@ -8,4 +8,10 @@ require recipes-core/images/arches-image.bb
 require recipes-core/images/arches-image-common.inc
 
 # --- Robotics & Autonomous Systems-specific packages (verified present in the included Yocto layers) ---
-IMAGE_INSTALL:append = " can-utils python3-can opencv gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-libav v4l-utils fio stress-ng"
+IMAGE_INSTALL:append = " \
+	can-utils python3-can gpsd linuxptp ptpd \
+	opencv gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+	gstreamer1.0-plugins-bad gstreamer1.0-libav v4l-utils \
+	mosquitto paho-mqtt-c python3-paho-mqtt \
+	libiio fio stress-ng \
+"
