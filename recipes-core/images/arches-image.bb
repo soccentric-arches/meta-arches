@@ -24,6 +24,9 @@ IMAGE_INSTALL:append = " \
 # the empty ext4 home partition (p4) is mounted over /home.
 IMAGE_INSTALL:append = " arches-home-init"
 
+# Expand single-partition deployments when the selected layout supports it.
+IMAGE_INSTALL:append = " expand-rootfs"
+
 # Connectivity — Ethernet DHCP, WiFi (requires M.2 Key E WiFi card)
 IMAGE_INSTALL:append = " \
     arches-connectivity \

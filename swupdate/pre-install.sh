@@ -1,9 +1,8 @@
 #!/bin/bash
-# SWUpdate pre-install script ─ included in every .swu package
+# SWUpdate pre-install script for Jetson Orin Nano — A/B slot detection
 #
-# Identifies the inactive rootfs slot on the Jetson Orin Nano SD card
-# (/dev/mmcblk1) and creates the /dev/swupdate-inactive symlink that the
-# "raw" image handler in sw-description writes to.
+# Identifies the inactive rootfs slot from the active root device and creates
+# the /dev/swupdate-inactive symlink that the raw image handler writes to.
 # Saves the target slot/device to /run/ for use by post-install.sh.
 
 set -euo pipefail
@@ -12,20 +11,24 @@ set -euo pipefail
 ACTIVE_DEV=$(findmnt -n -o SOURCE /)
 echo "[swupdate pre-install] active root: ${ACTIVE_DEV}"
 
-case "${ACTIVE_DEV}" in
-    /dev/mmcblk1p2)
-        INACTIVE_DEV=/dev/mmcblk1p3
-        INACTIVE_SLOT=b
-        ;;
-    /dev/mmcblk1p3)
-        INACTIVE_DEV=/dev/mmcblk1p2
-        INACTIVE_SLOT=a
-        ;;
-    *)
-        echo "[swupdate pre-install] ERROR: unexpected active device '${ACTIVE_DEV}'" >&2
-        exit 1
-        ;;
-esac
+if [[ "${ACTIVE_DEV}" =~ ^(/dev/mmcblk[0-9]+p|/dev/nvme[0-9]+n[0-9]+p)(2|3)$ ]]; then
+    PART_PREFIX="${BASH_REMATCH[1]}"
+    ACTIVE_PART="${BASH_REMATCH[2]}"
+elif [[ "${ACTIVE_DEV}" =~ ^(/dev/[a-z]+)(2|3)$ ]]; then
+    PART_PREFIX="${BASH_REMATCH[1]}"
+    ACTIVE_PART="${BASH_REMATCH[2]}"
+else
+    echo "[swupdate pre-install] ERROR: unexpected active device '${ACTIVE_DEV}'" >&2
+    exit 1
+fi
+
+INACTIVE_PART=$((5 - ACTIVE_PART))
+INACTIVE_DEV="${PART_PREFIX}${INACTIVE_PART}"
+if [[ "${INACTIVE_PART}" == "2" ]]; then
+    INACTIVE_SLOT=a
+else
+    INACTIVE_SLOT=b
+fi
 
 echo "[swupdate pre-install] target slot: ${INACTIVE_SLOT} (${INACTIVE_DEV})"
 

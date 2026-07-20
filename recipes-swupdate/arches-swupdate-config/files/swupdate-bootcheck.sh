@@ -3,6 +3,7 @@
 # previous extlinux configuration if the firmware did not boot the requested
 # slot at all.
 #
+<<<<<<< HEAD
 # Jetson Orin Nano SD card:
 #   /dev/mmcblk1p2  → slot a (rootfs-a)
 #   /dev/mmcblk1p3  → slot b (rootfs-b)
@@ -18,17 +19,24 @@
 # and the device reboots back into the last-known-good slot. mark-good clears
 # both the pending marker and the counter, so a confirmed boot is never
 # rolled back.
+=======
+# Rootfs slots are partition 2 (a) and partition 3 (b) on the selected disk.
+>>>>>>> 7a69886 (Improve rootfs expansion, slot detection, and secure‑boot config for Jetson Orin Nano)
 
 set -euo pipefail
 
 MAX_BOOT_ATTEMPTS=3
 
 ACTIVE_DEV=$(findmnt -n -o SOURCE / 2>/dev/null || echo "unknown")
-case "${ACTIVE_DEV}" in
-    /dev/mmcblk1p2) SLOT=a ;;
-    /dev/mmcblk1p3) SLOT=b ;;
-    *)              SLOT=unknown ;;
-esac
+if [[ "${ACTIVE_DEV}" =~ ^(/dev/mmcblk[0-9]+p|/dev/nvme[0-9]+n[0-9]+p|/dev/[a-z]+)(2|3)$ ]]; then
+    if [[ "${BASH_REMATCH[2]}" == "2" ]]; then
+        SLOT=a
+    else
+        SLOT=b
+    fi
+else
+    SLOT=unknown
+fi
 
 logger -t swupdate-bootcheck "Boot check: slot=${SLOT} dev=${ACTIVE_DEV}"
 echo "slot=${SLOT}" > /run/swupdate-active-slot

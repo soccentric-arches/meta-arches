@@ -1,10 +1,11 @@
 #!/bin/bash
-# SWUpdate post-install script ─ included in every .swu package
+# SWUpdate post-install script for Jetson Orin Nano — extlinux boot slot switch
 #
-# Updates /boot/extlinux/extlinux.conf so that the UEFI firmware on the
-# Jetson Orin Nano boots the newly written slot on the next reboot.
-# The boot partition is remounted read-write for the edit, then restored
-# to read-only.
+# Updates /boot/extlinux/extlinux.conf so that the UEFI firmware boots the
+# newly written slot on the next reboot. The previous configuration is saved
+# until the new slot has completed its first boot successfully.
+#
+# extlinux.conf root= parameter is updated to the PARTUUID of the new slot.
 
 set -euo pipefail
 
@@ -22,10 +23,19 @@ fi
 
 # ── Toggle root= in /boot/extlinux/extlinux.conf ─────────────────────────────
 EXTLINUX_CONF="/boot/extlinux/extlinux.conf"
+EXTLINUX_BACKUP="${EXTLINUX_CONF}.arches-previous"
+OTA_PENDING="/boot/extlinux/arches-ota-pending"
+
+if [[ ! -f "${EXTLINUX_CONF}" ]]; then
+    echo "[swupdate post-install] ERROR: ${EXTLINUX_CONF} not found" >&2
+    exit 1
+fi
 
 mount -o remount,rw /boot
+cp -f "${EXTLINUX_CONF}" "${EXTLINUX_BACKUP}"
 sed -i "s|root=PARTUUID=[a-fA-F0-9-]*|root=PARTUUID=${TARGET_PARTUUID}|g" \
     "${EXTLINUX_CONF}"
+printf '%s\n' "${TARGET_PARTUUID}" > "${OTA_PENDING}"
 mount -o remount,ro /boot
 
 echo "[swupdate post-install] extlinux.conf → root=PARTUUID=${TARGET_PARTUUID}"

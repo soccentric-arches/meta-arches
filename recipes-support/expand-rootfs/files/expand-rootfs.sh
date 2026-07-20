@@ -33,6 +33,17 @@ fi
 
 DISK_DEV="/dev/$DISK_NAME"
 
+# A/B and persistent-data layouts have a later partition immediately after
+# rootfs. Only resize layouts where the root partition reaches the disk end.
+if lsblk -nrpo NAME,PARTNUM "$DISK_DEV" | \
+    awk -v root="$ROOT_DEV" -v part="$PART_NUM" \
+        '$1 != root && $2 ~ /^[0-9]+$/ && $2 > part { found=1 } END { exit !found }'; then
+    echo "expand-rootfs: later partition detected; leaving fixed rootfs unchanged."
+    mkdir -p "$(dirname "$FLAG")"
+    touch "$FLAG"
+    exit 0
+fi
+
 echo "expand-rootfs: resizing partition $PART_NUM on $DISK_DEV ..."
 parted -s "$DISK_DEV" resizepart "$PART_NUM" 100%
 
