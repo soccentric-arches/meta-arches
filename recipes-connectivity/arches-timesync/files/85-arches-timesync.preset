@@ -1,0 +1,14 @@
+# Default time-sync service state for Arches images.
+#
+# WebConfig's Time & Sync pages (Clock/NTP, PTP, GPS/GNSS) are mutually
+# exclusive (SystemConfig.time validation) and switched at runtime with
+# `systemctl restart`/`stop` only — the daemon never persists the choice via
+# `enable`/`disable`. Default to plain NTP via systemd-timesyncd so a
+# first-boot device has correct time; leave chrony/linuxptp/gpsd disabled so
+# they don't race timesyncd for UDP/123 or the PPS/GPS device before an
+# operator has chosen a mode.
+enable systemd-timesyncd.service
+disable chrony.service
+disable ptp4l@*.service
+disable phc2sys.service
+disable gpsd.service

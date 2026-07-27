@@ -93,6 +93,16 @@ IMAGE_INSTALL:append = " \
     can-utils \
 "
 
+# WebConfig (on-device configuration UI) + every system service/tool it
+# manages or shells out to (polkit, WireGuard, AP-mode hostapd/dnsmasq, nft
+# firewall, time-sync backends, mmc-utils for eMMC wear, RAUC-CLI shim over
+# the real SWUpdate A/B scheme). Placed here (not only in
+# arches-image-common.inc) so it ships on the plain "arches-image" build
+# target too, not just the domain-specific variants. See
+# Arches-Configuration/Feature.md for the full page-by-page inventory this
+# backs, and packagegroup-arches-webconfig.bb for the package list itself.
+IMAGE_INSTALL:append = " packagegroup-arches-webconfig"
+
 # System / hardware inspection
 IMAGE_INSTALL:append = " \
     lshw \

@@ -1,0 +1,182 @@
+#!/bin/bash
+# /usr/bin/rauc — CLI-compatible shim for Arches-Configuration's RaucUpdateBackend.
+#
+# Arches-OS's real A/B OTA transport is SWUpdate (.swu bundles over the
+# extlinux/PARTUUID slot-switch scheme in arches-swupdate-config), not RAUC —
+# there is no meta-rauc layer in this build (kas/common.yaml only pulls
+# poky/meta-openembedded/meta-tegra/meta-swupdate/meta-arches; adding a new
+# external layer is out of meta-arches's own scope). webconfigd's update
+# backend, however, shells out to the literal `rauc` binary
+# (Arches-Configuration crates/webconfigd/src/update_backend.rs
+# ::rauc_available() probes `rauc --version`; crates/webconfig-engine/src/
+# update.rs's RaucUpdateBackend calls exactly the four subcommands below) and
+# silently falls back to a mock backend with fabricated slot data if `rauc`
+# is not on PATH. This script implements just that four-command contract,
+# backed by the real SWUpdate slot/extlinux state, so the Updates page
+# reflects the real device instead of fabricated Slot A/B data.
+#
+# Commands implemented (exactly what the engine calls):
+#   rauc --version
+#   rauc status --output-format=json
+#   rauc info <bundle>
+#   rauc install <bundle>
+#   rauc status mark-good
+#
+# State files (shared with arches-swupdate-config's pre/post-install.sh and
+# swupdate-bootcheck.sh):
+#   /boot/extlinux/arches-ota-pending        target PARTUUID awaiting confirm
+#   /boot/extlinux/arches-ota-boot-attempts   boot-attempt counter since flash
+#
+# Assumption (one line, matching this codebase's convention of stating
+# real-interaction limits explicitly): slot *version* is only ever read from
+# the currently-booted slot's /etc/os-release (VERSION_ID) — the inactive
+# slot's rootfs is not mounted to read its version, so it is reported as
+# "unknown" rather than fabricated.
+
+set -euo pipefail
+
+EXTLINUX_DIR="/boot/extlinux"
+OTA_PENDING="${EXTLINUX_DIR}/arches-ota-pending"
+OTA_ATTEMPTS="${EXTLINUX_DIR}/arches-ota-boot-attempts"
+SWUPDATE_CFG="/etc/swupdate/swupdate.cfg"
+
+active_dev() {
+    findmnt -n -o SOURCE / 2>/dev/null || echo "unknown"
+}
+
+# Map a device to an "A"/"B" display slot name (mirrors pre-install.sh's
+# a/b mapping) and its sibling (inactive) device.
+slot_name() {
+    case "$1" in
+        /dev/mmcblk1p2) echo "A" ;;
+        /dev/mmcblk1p3) echo "B" ;;
+        *)              echo "?" ;;
+    esac
+}
+
+sibling_dev() {
+    case "$1" in
+        /dev/mmcblk1p2) echo "/dev/mmcblk1p3" ;;
+        /dev/mmcblk1p3) echo "/dev/mmcblk1p2" ;;
+        *)              echo "" ;;
+    esac
+}
+
+active_version() {
+    if [ -r /etc/os-release ]; then
+        # shellcheck disable=SC1091
+        . /etc/os-release
+        echo "${VERSION_ID:-unknown}"
+    else
+        echo "unknown"
+    fi
+}
+
+cmd_version() {
+    echo "rauc-shim (arches-rauc-shim) — SWUpdate-backed, not upstream RAUC"
+    exit 0
+}
+
+cmd_status_json() {
+    local adev sdev aslot sslot aver pending confirmed state
+    adev=$(active_dev)
+    sdev=$(sibling_dev "$adev")
+    aslot=$(slot_name "$adev")
+    sslot=$(slot_name "$sdev")
+    aver=$(active_version)
+
+    pending="false"
+    [ -f "$OTA_PENDING" ] && pending="true"
+
+    if [ "$pending" = "true" ]; then
+        confirmed="false"
+        state="unknown"
+    else
+        confirmed="true"
+        state="good"
+    fi
+
+    printf '[\n'
+    printf '  {"slot":"%s","version":"%s","running":true,"confirmed":%s,"state":"%s"}' \
+        "$aslot" "$aver" "$confirmed" "$state"
+    if [ -n "$sslot" ] && [ "$sslot" != "?" ]; then
+        printf ',\n  {"slot":"%s","version":"unknown","running":false,"confirmed":true,"state":"good"}' "$sslot"
+    fi
+    printf '\n]\n'
+}
+
+cmd_info() {
+    local bundle="$1"
+    [ -f "$bundle" ] || { echo "rauc: info: no such bundle: $bundle" >&2; exit 1; }
+
+    local version="unknown"
+    local desc="$bundle"
+    # .swu bundles are cpio archives; sw-description is the first entry.
+    local swdesc
+    swdesc=$(cpio -i --to-stdout sw-description <"$bundle" 2>/dev/null || true)
+    if [ -n "$swdesc" ]; then
+        version=$(printf '%s\n' "$swdesc" | sed -n -E 's/.*version[[:space:]]*=[[:space:]]*"([^"]*)".*/\1/p' | head -n1)
+        [ -z "$version" ] && version="unknown"
+    fi
+
+    # This build's platform id (mirrors WEBCONFIG_PLATFORM=arches baked into
+    # webconfigd.env / BUILD_PLATFORM's compiled-in default) — a real RAUC
+    # bundle would carry this in its own manifest; our .swu format doesn't,
+    # so it's fixed here rather than fabricated per-bundle.
+    printf "Compatible:  'arches'\n"
+    printf "Version:     '%s'\n" "$version"
+    printf "Variant:     ''\n"
+    printf "Description: '%s'\n" "$desc"
+}
+
+cmd_install() {
+    local bundle="$1"
+    [ -f "$bundle" ] || { echo "rauc: install: no such bundle: $bundle" >&2; exit 1; }
+
+    # Real install: hand off to SWUpdate using the same config the daemon and
+    # web UI use. pre-install.sh/post-install.sh (embedded in the bundle,
+    # arches-swupdate-config) handle slot selection and the extlinux flip;
+    # post-install.sh writes arches-ota-pending. We reset the attempt counter
+    # here so the first post-flash boot starts a fresh confirmation window.
+    swupdate -f "$SWUPDATE_CFG" -i "$bundle"
+    echo 0 > "$OTA_ATTEMPTS"
+}
+
+cmd_mark_good() {
+    # Manual confirmation: clear the pending marker and attempt counter so
+    # swupdate-bootcheck.sh's auto-rollback (see that script) never fires for
+    # this boot again. Idempotent — fine to call with nothing pending.
+    mount -o remount,rw /boot 2>/dev/null || true
+    rm -f "$OTA_PENDING" "${EXTLINUX_DIR}/extlinux.conf.arches-previous" "$OTA_ATTEMPTS"
+    mount -o remount,ro /boot 2>/dev/null || true
+    logger -t rauc-shim "boot marked good (mark-good); rollback window cancelled"
+}
+
+case "${1:-}" in
+    --version)
+        cmd_version
+        ;;
+    status)
+        case "${2:-}" in
+            --output-format=json) cmd_status_json ;;
+            mark-good)            cmd_mark_good ;;
+            *)
+                echo "rauc-shim: usage: rauc status --output-format=json | rauc status mark-good" >&2
+                exit 2
+                ;;
+        esac
+        ;;
+    info)
+        [ $# -eq 2 ] || { echo "rauc-shim: usage: rauc info <bundle>" >&2; exit 2; }
+        cmd_info "$2"
+        ;;
+    install)
+        [ $# -eq 2 ] || { echo "rauc-shim: usage: rauc install <bundle>" >&2; exit 2; }
+        cmd_install "$2"
+        ;;
+    *)
+        echo "rauc-shim: unsupported command: ${1:-<none>}" >&2
+        echo "rauc-shim implements only: --version, status --output-format=json, status mark-good, info <bundle>, install <bundle>" >&2
+        exit 2
+        ;;
+esac

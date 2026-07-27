@@ -97,3 +97,7 @@ IMAGE_INSTALL:append = " \
 IMAGE_INSTALL:append = " \
     libgpiod i2c-tools spitools libiio \
 "
+
+# packagegroup-arches-webconfig is installed from arches-image.bb (required
+# by every domain variant, including this one) so it also covers the plain
+# "arches-image" build target — see that recipe for the actual append.
