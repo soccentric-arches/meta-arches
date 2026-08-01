@@ -8,9 +8,9 @@ LICENSE = "CLOSED"
 # --ssh-dir), so no additional credential wiring is needed here.
 SRC_URI = "git://git@github.com/SiliconCentric/Arches-HAL.git;protocol=ssh;branch=develop"
 
-# Tracks the tip of develop. Not reproducible build-to-build — pin SRCREV to
-# a specific commit once develop stabilizes.
-SRCREV = "${AUTOREV}"
+# Pinned to the tip of develop as of 2026-08-01 for reproducible builds.
+# Bump this hash when develop moves.
+SRCREV = "cbc59cb1a2c7dbdfa7c9cc4c0f39f2e76645deec"
 PV = "0.1+git${SRCPV}"
 
 S = "${WORKDIR}/git"
