@@ -9,6 +9,7 @@ inherit packagegroup
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 RDEPENDS:${PN} = " \
+    arches-hal \
     protobuf \
     protobuf-compiler \
     protobuf-lite \
