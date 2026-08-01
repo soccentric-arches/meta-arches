@@ -32,6 +32,6 @@ RDEPENDS:${PN} = " \
     can-utils \
     linuxptp \
     gpsd \
-    gpsd-clients \
+    gps-utils \
     chrony \
 "

@@ -22,10 +22,22 @@ ARCHES_SWUPDATE_PUBLIC_KEY ?= ""
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 do_install() {
+    # ARCHES_SECURE_BOOT=0 (dev/default builds): there is no real trust chain
+    # to report yet — ship nothing at all so the daemon's read_platform_status()
+    # correctly reports platform_status_available=false instead of a
+    # fabricated "not_enabled" reading, matching secure_boot's own manifest
+    # flag being the build-time capability declaration, not a live status.
+    # Installing nothing (rather than installing then deleting) also avoids
+    # leaving behind empty parent directories that trip the packaging QA
+    # installed-vs-shipped check.
+    if [ "${ARCHES_SECURE_BOOT}" != "1" ]; then
+        return
+    fi
+
     install -d ${D}${datadir}/webconfig
 
     key_id="null"
-    if [ "${ARCHES_SECURE_BOOT}" = "1" ] && [ -n "${ARCHES_SWUPDATE_PUBLIC_KEY}" ] && [ -f "${ARCHES_SWUPDATE_PUBLIC_KEY}" ]; then
+    if [ -n "${ARCHES_SWUPDATE_PUBLIC_KEY}" ] && [ -f "${ARCHES_SWUPDATE_PUBLIC_KEY}" ]; then
         # Short, stable identifier for the installed SWUpdate verification
         # key: SHA-256 of the DER-encoded SubjectPublicKeyInfo, first 16 hex
         # chars. ARCHES_SWUPDATE_PUBLIC_KEY may be either a bare public-key
@@ -45,25 +57,13 @@ do_install() {
     # (Arches-OS confirms integrity via A/B slot signature verification, not
     # verity/dm-crypt) — report the real, honest "not_enabled" state rather
     # than a bare "unknown" (spec: distinguish real-read-came-back-negative
-    # from feature-not-implemented-on-this-platform; ARCHES_SECURE_BOOT=0
-    # covers the latter by shipping no platform-status.json at all, below).
+    # from feature-not-implemented-on-this-platform).
     cat > ${D}${datadir}/webconfig/platform-status.json <<EOF
 {
     "update_signing_key_id": ${key_id},
     "verity_status": "not_enabled",
-    "encryption_status": "not_enabled"
-}
+    "encryption_status": "not_enabled"}
 EOF
-
-    # ARCHES_SECURE_BOOT=0 (dev/default builds): there is no real trust chain
-    # to report yet — ship nothing so the daemon's read_platform_status()
-    # correctly reports platform_status_available=false instead of a
-    # fabricated "not_enabled" reading, matching secure_boot's own manifest
-    # flag being the build-time capability declaration, not a live status.
-    if [ "${ARCHES_SECURE_BOOT}" != "1" ]; then
-        rm -f ${D}${datadir}/webconfig/platform-status.json
-        rmdir --ignore-fail-on-non-empty ${D}${datadir}/webconfig ${D}${datadir} 2>/dev/null || true
-    fi
 }
 
 FILES:${PN} = "${datadir}/webconfig/platform-status.json"

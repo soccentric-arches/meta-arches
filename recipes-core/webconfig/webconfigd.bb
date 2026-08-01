@@ -51,20 +51,24 @@ S = "${WORKDIR}/webconfigd-${PV}"
 inherit cargo cargo-update-recipe-crates pkgconfig systemd useradd
 
 # --- Build configuration (release profile is in Arches-Configuration's Cargo.toml) --
-CARGO_BUILD_FLAGS = "--release"
+# cargo.bbclass's own CARGO_BUILD_FLAGS already includes --release (via
+# BUILD_MODE) plus --manifest-path/--frozen/--target — do not override it
+# here, doing so drops --manifest-path and cargo can't find Cargo.toml from
+# the out-of-tree build dir (B) cargo.bbclass builds in.
 
 # Offline build: use the committed vendor/ tarball, never the network.
 CARGO_VENDORING_DIR = "${S}/vendor"
 export CARGO_NET_OFFLINE = "1"
 
-# Target the image's target triple (cross-compile handled by the toolchain).
-CARGO_SRC_DIR = "${S}"
+# Cargo.toml sits at the root of the S tarball, so CARGO_SRC_DIR (a subdir
+# *relative to* S) stays at its default "" — do not set it to ${S} itself,
+# that doubles up into ${S}/${S}/Cargo.toml via CARGO_MANIFEST_PATH.
 
 # --- Runtime user (non-root) -------------------------------------------------
 WEBCONFIG_USER = "webconfig"
 WEBCONFIG_GROUP = "webconfig"
 USERADD_PACKAGES = "${PN}"
-USERADD_PARAM:${PN} = "-r -M -d /var/lib/webconfig -s /usr/sbin/nologin ${WEBCONFIG_USER}"
+USERADD_PARAM:${PN} = "-r -M -d /var/lib/webconfig -s /usr/sbin/nologin -g ${WEBCONFIG_GROUP} ${WEBCONFIG_USER}"
 GROUPADD_PARAM:${PN} = "-r ${WEBCONFIG_GROUP}"
 
 # --- Installed files ---------------------------------------------------------
