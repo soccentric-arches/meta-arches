@@ -50,6 +50,53 @@ S = "${WORKDIR}/webconfigd-${PV}"
 
 inherit cargo cargo-update-recipe-crates pkgconfig systemd useradd
 
+# --- Cargo.lock compatibility fix -------------------------------------------
+# The source tarball ships Cargo.lock v4, but the Yocto scarthgap cargo
+# (meta-rust-bin) only supports v3. Downgrade the lock file version before
+# the build so cargo --frozen doesn't reject it.
+do_configure:prepend() {
+    if grep -q '^version = 4' ${S}/Cargo.lock 2>/dev/null; then
+        bbnote "Downgrading Cargo.lock from v4 to v3 for Yocto cargo compatibility"
+        sed -i 's/^version = 4/version = 3/' ${S}/Cargo.lock
+    fi
+
+    # The source tarball's .cargo/config.toml has the vendor source replacement
+    # stripped (comment says "TEMP (restored after vendoring)"). Restore it so
+    # cargo --frozen can find the vendored crates instead of searching crates.io.
+    # The vendor/ directory is unpacked alongside the source by the vendor tarball.
+    if [ -d "${S}/vendor" ] && [ -f "${S}/.cargo/config.toml" ]; then
+        bbnote "Adding vendor source replacement to .cargo/config.toml"
+        cat >> "${S}/.cargo/config.toml" << 'VENDOREOF'
+
+# Vendor source replacement (restored by Yocto recipe do_configure:prepend)
+# so cargo --frozen resolves dependencies from the vendored tarball.
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "vendor"
+VENDOREOF
+    fi
+
+    # The cargo.bbclass generates a cargo_home/config that sets
+    # [source.crates-io] replace-with = "bitbake", but the bitbake source
+    # directory is empty. Override it to use the vendored sources instead.
+    CARGO_HOME_CONFIG="${CARGO_HOME}/config"
+    if [ -f "$CARGO_HOME_CONFIG" ] && [ -d "${S}/vendor" ]; then
+        bbnote "Updating cargo_home/config to use vendored sources"
+        sed -i 's|replace-with = "bitbake"|replace-with = "vendored-sources"|' "$CARGO_HOME_CONFIG"
+        # Add the vendored-sources definition after the bitbake source section
+        if ! grep -q 'vendored-sources' "$CARGO_HOME_CONFIG"; then
+            cat >> "$CARGO_HOME_CONFIG" << 'VENDORCFG'
+
+[source.vendored-sources]
+directory = "VENDOR_DIR_PLACEHOLDER"
+VENDORCFG
+            sed -i "s|VENDOR_DIR_PLACEHOLDER|${S}/vendor|" "$CARGO_HOME_CONFIG"
+        fi
+    fi
+}
+
 # --- Build configuration (release profile is in Arches-Configuration's Cargo.toml) --
 # cargo.bbclass's own CARGO_BUILD_FLAGS already includes --release (via
 # BUILD_MODE) plus --manifest-path/--frozen/--target — do not override it
