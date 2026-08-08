@@ -26,7 +26,7 @@ RDEPENDS:${PN} = " \
     hostapd \
     dnsmasq \
     iw \
-    wireless-regdb \
+    wireless-regdb-static \
     nftables \
     mmc-utils \
     can-utils \
