@@ -41,29 +41,40 @@ SRC_URI = " \
 # dist/CHECKSUMS.sha256, produced by tools/release-artifacts.sh). Regenerate
 # both at every Arches-Configuration release cut — valid only for the exact
 # tarball contents they were computed from.
-SRC_URI[src.sha256sum] = "6d7222a290cf138fbbca1610c6324213be318fdb1130cc4bb502423ac212e0ee"
-SRC_URI[vendor.sha256sum] = "32045b440cc598ca862c198fd2aac8d15b3018dd20ab2d59cd3a077f375a56dc"
+SRC_URI[src.sha256sum] = "3664216eb92e65e9cec37ebe0aacc30d3a0bb0982012fa046769e37f560856ef"
+SRC_URI[vendor.sha256sum] = "b5ea86f4ab0b261cf58d8b54c4f016b8e37f68fc7e456921b3db3667bd41a185"
 
 PV = "0.1.0"
 
 S = "${WORKDIR}/webconfigd-${PV}"
 
-inherit cargo cargo-update-recipe-crates pkgconfig systemd useradd
+inherit cargo_bin cargo-update-recipe-crates pkgconfig systemd useradd
 
 # --- Build configuration (release profile is in Arches-Configuration's Cargo.toml) --
-# cargo.bbclass's own CARGO_BUILD_FLAGS already includes --release (via
-# BUILD_MODE) plus --manifest-path/--frozen/--target — do not override it
-# here, doing so drops --manifest-path and cargo can't find Cargo.toml from
-# the out-of-tree build dir (B) cargo.bbclass builds in.
+# cargo_bin (meta-rust-bin) builds out-of-tree into ${B} and installs from
+# ${CARGO_BINDIR}. It provides the prebuilt rust/cargo 1.85.1 toolchain
+# (PREFERRED_VERSION in kas/common.yaml) that the vendored crates need —
+# poky's rust-native 1.75.0 cannot parse edition2024 manifests.
 
 # Offline build: use the committed vendor/ tarball, never the network.
 CARGO_VENDORING_DIRECTORY = "${S}/vendor"
 export CARGO_NET_OFFLINE = "1"
 
-# The cargo.bbclass generates a cargo_home/config that sets
-# [source.bitbake] directory = CARGO_VENDORING_DIRECTORY.
-# By pointing it at ${S}/vendor, cargo resolves crates from the vendored
-# tarball instead of searching crates.io.
+# cargo_bin does not generate a cargo_home/config the way poky's cargo.bbclass
+# does, so point cargo at the vendored crates ourselves. Overwrite (not append)
+# so a stale config left by a previous cargo.bbclass build can't cause a
+# duplicate [source.crates-io] key. cargo_bin sets linkers/build-dir via env
+# vars, so the vendoring section is all this config needs.
+do_configure:append() {
+    cat > "${CARGO_HOME}/config" << EOF
+
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "${CARGO_VENDORING_DIRECTORY}"
+EOF
+}
 
 # Cargo.toml sits at the root of the S tarball, so CARGO_SRC_DIR (a subdir
 # *relative to* S) stays at its default "" — do not set it to ${S} itself,
@@ -79,7 +90,7 @@ GROUPADD_PARAM:${PN} = "-r ${WEBCONFIG_GROUP}"
 # --- Installed files ---------------------------------------------------------
 do_install:append() {
     install -d ${D}${bindir}
-    install -m 0755 ${B}/release/webconfigd ${D}${bindir}/webconfigd
+    install -m 0755 ${CARGO_BINDIR}/webconfigd ${D}${bindir}/webconfigd
 
     # Data partition owned by the runtime user (config.json, users.json, certs).
     install -d -o ${WEBCONFIG_USER} -g ${WEBCONFIG_GROUP} ${D}/var/lib/webconfig
@@ -104,6 +115,13 @@ SYSTEMD_AUTO_ENABLE:${PN} = "enable"
 RDEPENDS:${PN} = "ca-certificates polkit"
 # systemd is the supervisor (D-Bus actions via polkit).
 RRECOMMENDS:${PN} = "systemd polkit"
+
+# The release profile (opt-level=z, lto, strip) ships an already-stripped
+# binary — skip the already-stripped QA check.
+INSANE_SKIP:${PN} += "already-stripped"
+
+# Ship the polkit rule installed in do_install.
+FILES:${PN} += "${datadir}/polkit-1/rules.d/50-webconfigd.rules"
 
 # SPDX/SBOM: emit the cargo dependency manifest as part of the recipe metadata
 # (supply-chain concern; new deps require approval upstream in Arches-Configuration).
