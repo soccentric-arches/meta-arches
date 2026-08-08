@@ -35,7 +35,6 @@ SRC_URI = " \
     file://vendor.tar.gz;unpack=1;subdir=webconfigd-${PV};name=vendor \
     file://webconfigd.service \
     file://webconfigd.env \
-    file://50-webconfigd.polkit.rules \
 "
 # SHA-256 of the source + vendored tarballs (Arches-Configuration
 # dist/CHECKSUMS.sha256, produced by tools/release-artifacts.sh). Regenerate
@@ -100,11 +99,6 @@ do_install:append() {
     install -m 0644 ${WORKDIR}/webconfigd.service ${D}${systemd_system_unitdir}/
     install -d ${D}${sysconfdir}/default
     install -m 0644 ${WORKDIR}/webconfigd.env ${D}${sysconfdir}/default/webconfigd
-
-    # polkit rule granting the daemon the limited D-Bus actions it needs.
-    install -d ${D}${datadir}/polkit-1/rules.d
-    install -m 0644 ${WORKDIR}/50-webconfigd.polkit.rules \
-        ${D}${datadir}/polkit-1/rules.d/50-webconfigd.rules
 }
 
 SYSTEMD_SERVICE:${PN} = "webconfigd.service"
@@ -119,9 +113,6 @@ RRECOMMENDS:${PN} = "systemd polkit"
 # The release profile (opt-level=z, lto, strip) ships an already-stripped
 # binary — skip the already-stripped QA check.
 INSANE_SKIP:${PN} += "already-stripped"
-
-# Ship the polkit rule installed in do_install.
-FILES:${PN} += "${datadir}/polkit-1/rules.d/50-webconfigd.rules"
 
 # SPDX/SBOM: emit the cargo dependency manifest as part of the recipe metadata
 # (supply-chain concern; new deps require approval upstream in Arches-Configuration).
