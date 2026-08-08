@@ -20,9 +20,14 @@ PV = "0.1.0"
 
 # Same source tarball as webconfigd.bb (the whole repo, incl. frontend/).
 SRC_URI = "file://webconfigd-${PV}.tar.gz;unpack=1"
-SRC_URI[sha256sum] = "92fb5966b71ef40989ead01fdd7f0d81993c056c72e9f68e377df5a0e98041d2"
+SRC_URI[sha256sum] = "3664216eb92e65e9cec37ebe0aacc30d3a0bb0982012fa046769e37f560856ef"
 
 S = "${WORKDIR}/webconfigd-${PV}"
+
+# Install-only recipe — skip the default base_do_configure, which would run
+# `make clean` from the source tarball's Makefile (that target calls
+# `cargo clean`, and cargo isn't in PATH here).
+do_configure[noexec] = "1"
 
 STATIC_DIR = "${D}/usr/share/webconfig/static"
 
