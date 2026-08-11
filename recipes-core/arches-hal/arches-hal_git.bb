@@ -3,9 +3,10 @@ DESCRIPTION = "Hardware abstraction layer and gRPC middleware service consumed b
 Arches Client and Configuration applications"
 LICENSE = "CLOSED"
 
-# Private repo — fetched over SSH. The build container already maps the
-# host user's ~/.ssh in via KAS_SSH_DIR (see Makefile KAS_ENV / kas-container
-# --ssh-dir), so no additional credential wiring is needed here.
+# Private repo — fetched over SSH. The eSDK Docker image installs
+# openssh-client and copies the host's SSH keys (docker/esdk/ssh/, gitignored)
+# so the self-contained eSDK installer can fetch the source during build-system
+# preparation.
 SRC_URI = "git://git@github.com/SiliconCentric/Arches-HAL.git;protocol=ssh;branch=develop"
 
 # Tracks the tip of develop. Not reproducible build-to-build — pin SRCREV to

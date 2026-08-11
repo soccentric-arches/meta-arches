@@ -75,6 +75,16 @@ directory = "${CARGO_VENDORING_DIRECTORY}"
 EOF
 }
 
+# Use the relocated cargo-bin-cross/rust-bin-cross toolchains (relocated in
+# meta-arches bbappends to avoid colliding with cargo-native/rust-native in
+# the eSDK sysroot). cargo-native/rust-native (1.75.0) cannot parse
+# edition2024 manifests, so webconfigd must use cargo-bin-cross/rust-bin-cross
+# (1.85.1). The relocated bin dirs are prepended to PATH so `cargo`/`rustc`
+# resolve to the prebuilt 1.85.1 toolchain for this recipe only.
+do_compile:prepend() {
+    export PATH="${STAGING_DIR_NATIVE}${prefix}/rust-bin-cross/bin:${STAGING_DIR_NATIVE}${prefix}/cargo-bin-cross/bin:$PATH"
+}
+
 # Cargo.toml sits at the root of the S tarball, so CARGO_SRC_DIR (a subdir
 # *relative to* S) stays at its default "" — do not set it to ${S} itself,
 # that doubles up into ${S}/${S}/Cargo.toml via CARGO_MANIFEST_PATH.

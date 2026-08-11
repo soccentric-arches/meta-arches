@@ -9,6 +9,16 @@
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
+# Use duktape instead of mozjs for the polkit JS rules engine. mozjs pulls
+# in cargo-native/rust-native (via its Rust build), which collide with
+# cargo-bin-cross/rust-bin-cross (used by webconfigd) on /usr/bin/cargo and
+# /usr/bin/rustc in the eSDK sysroot — breaking `make esdk-image`. The
+# webconfigd polkit rule (50-webconfigd.polkit.rules) uses only ES5 features
+# (Array.prototype.indexOf) that duktape supports, so switching engines is
+# safe for the rules we ship.
+PACKAGECONFIG:remove = "mozjs"
+PACKAGECONFIG:append = " duktape"
+
 SRC_URI += "file://50-webconfigd.polkit.rules"
 
 do_install:append() {
