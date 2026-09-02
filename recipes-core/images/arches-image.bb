@@ -64,7 +64,6 @@ IMAGE_INSTALL:append = " \
 IMAGE_INSTALL:append = " \
     libgpiod \
     libgpiod-tools \
-    python3-gpiod \
 "
 
 # UART / serial
