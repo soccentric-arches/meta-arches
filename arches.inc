@@ -5,7 +5,7 @@
 #
 # == Kernel config fragments ==
 # Drop a .cfg file into recipes-kernel/linux/files/<name>.cfg, then add
-# <name> to ARCHES_KERNEL_FEATURES below. The linux-tegra (R35.x) kernel
+# <name> to ARCHES_KERNEL_FEATURES below. The linux-noble-nvidia-tegra (R38.x) kernel
 # bbappend merges every listed fragment into KERNEL_CONFIG_FRAGMENTS.
 #
 # == Device-tree overlays ==
