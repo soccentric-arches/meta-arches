@@ -2,6 +2,10 @@ SUMMARY = "Arches connectivity — DHCP on Ethernet, WiFi (optional M.2 card) an
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
+# Whinlatter: S = ${WORKDIR} is no longer supported; file:// sources
+# unpack to UNPACKDIR.
+S = "${UNPACKDIR}"
+
 SRC_URI = " \
     file://10-eth.network \
     file://20-wlan.network \

@@ -13,7 +13,9 @@ SRC_URI = " \
     file://arches-home-init.service \
 "
 
-S = "${WORKDIR}"
+# Whinlatter: S = ${WORKDIR} is no longer supported; file:// sources
+# unpack to UNPACKDIR.
+S = "${UNPACKDIR}"
 
 inherit systemd
 

@@ -15,7 +15,9 @@ SRC_URI = " \
     file://swupdate-webui.conf \
 "
 
-S = "${WORKDIR}"
+# Whinlatter: S = ${WORKDIR} is no longer supported; file:// sources
+# unpack to UNPACKDIR.
+S = "${UNPACKDIR}"
 
 inherit systemd
 
