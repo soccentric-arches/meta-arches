@@ -189,3 +189,82 @@ arches_install_swupdate_key() {
 }
 
 ROOTFS_POSTPROCESS_COMMAND += "arches_install_swupdate_key;"
+
+# ---------------------------------------------------------------------------
+# Image self-check (Task.md D-16)
+#
+# Every failure in Task.md's D group was of the same shape: something the
+# image was supposed to contain was simply absent, and nothing noticed until a
+# board was flashed. A unit whose ReadWritePaths target does not exist does not
+# fail at build time -- it fails at boot, on hardware, in a way that reads like
+# a runtime bug.
+#
+# So assert the composition here, where it is cheap. Each check below
+# corresponds to a defect that actually shipped:
+#   D-02  the wrong board's devices.yaml installed on every Jetson
+#   D-03  no /pst partition, so instr-istate could not start
+#   D-04  /pst never mounted or provisioned
+#   D-05  a unit naming /mnt/boot, which exists on no image
+#   D-08  the suite in no image at all
+# ---------------------------------------------------------------------------
+arches_check_image_composition() {
+    fail=0
+    _bad() { bbwarn "image check: $1"; fail=1; }
+
+    if [ "${ARCHES_INSTRUMENTATION}" = "1" ]; then
+        # The ten units must be installed AND enabled. Installed-but-disabled
+        # is the quiet failure: everything looks present and nothing runs.
+        for u in istate networkd monitord hardware faults alarms logmanager \
+                 telemetry ota backup; do
+            unit="${IMAGE_ROOTFS}${systemd_unitdir}/system/instr-$u.service"
+            [ -f "$unit" ] || _bad "instr-$u.service is not installed"
+            [ -L "${IMAGE_ROOTFS}${sysconfdir}/systemd/system/multi-user.target.wants/instr-$u.service" ] \
+                || _bad "instr-$u.service is installed but not enabled"
+        done
+
+        # D-05: every path a unit declares writable must exist in the rootfs or
+        # be a mount point, unless it is '-'-prefixed (optional). This is the
+        # check that would have caught /mnt/boot.
+        for unit in ${IMAGE_ROOTFS}${systemd_unitdir}/system/instr-*.service; do
+            [ -f "$unit" ] || continue
+            for p in $(sed -n 's/^ReadWritePaths=//p' "$unit"); do
+                case "$p" in
+                    -*) continue ;;                      # optional by design
+                    /pst*|/run/*|/var/*) continue ;;     # mount points / tmpfiles
+                esac
+                [ -e "${IMAGE_ROOTFS}$p" ] \
+                    || _bad "$(basename $unit) declares ReadWritePaths=$p, which is not in the rootfs"
+            done
+        done
+
+        # D-03/D-04: /pst has to be mounted, not merely partitioned.
+        [ -f "${IMAGE_ROOTFS}${systemd_unitdir}/system/pst.mount" ] \
+            || _bad "pst.mount is missing: /pst will never be mounted"
+        [ -f "${IMAGE_ROOTFS}${nonarch_libdir}/tmpfiles.d/pst.conf" ] \
+            || _bad "pst.conf tmpfiles fragment is missing: /pst subdirectories will not exist"
+
+        # D-02: the installed descriptors must be this MACHINE's, not another
+        # board's. Guards the x86-64-on-a-Jetson failure permanently.
+        dev="${IMAGE_ROOTFS}${sysconfdir}/instrumentation/devices.yaml"
+        if [ -f "$dev" ]; then
+            case "${MACHINE}" in
+                *orin*|p3768-*|p3767-*|p3509-*|p3737-*|p3701-*)
+                    grep -qi "x86" "$dev" && _bad "MACHINE=${MACHINE} but devices.yaml looks like the x86-64 descriptor set (Task.md D-02)"
+                    ;;
+            esac
+        else
+            _bad "instrumentation is installed but /etc/instrumentation/devices.yaml is missing"
+        fi
+    fi
+
+    if [ "${ARCHES_IVV}" = "1" ]; then
+        [ -f "${IMAGE_ROOTFS}${systemd_unitdir}/system/arches-client.service" ] \
+            || _bad "arches-client.service is not installed"
+    fi
+
+    if [ "$fail" = "1" ]; then
+        bbfatal "image composition check failed -- see the warnings above"
+    fi
+}
+
+ROOTFS_POSTPROCESS_COMMAND += "arches_check_image_composition;"
