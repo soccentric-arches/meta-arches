@@ -26,6 +26,17 @@ IMAGE_INSTALL:append = " \
     ${@bb.utils.contains('ARCHES_INSTRUMENTATION', '1', 'instrumentation', '', d)} \
 "
 
+# The IV&V product itself: the HAL and the validation client that drives it.
+# Gated on ARCHES_IVV so a board profile can build a plain platform image.
+#
+# Arches-Server is deliberately absent and that is not an omission: it runs on
+# an x86 host, not the Jetson, and is the peer this client streams results TO.
+# Packaging it for the device image would be wrong, not merely unnecessary.
+# See Task.md D-10/D-11.
+IMAGE_INSTALL:append = " \
+    ${@bb.utils.contains('ARCHES_IVV', '1', 'arches-hal arches-client', '', d)} \
+"
+
 # OTA via SWUpdate — A/B rootfs slot switching, web UI on :8080
 IMAGE_INSTALL:append = " \
     swupdate \
