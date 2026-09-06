@@ -1,6 +1,6 @@
 SUMMARY = "Initialise /home on first boot after the persistent home partition is mounted"
 DESCRIPTION = "\
-On first boot the empty ext4 home partition (p4) is mounted at /home, hiding \
+On first boot the empty ext4 home partition (p5) is mounted at /home, hiding \
 the skeleton copy that useradd placed in the rootfs.  This one-shot service \
 creates /home/arches with correct ownership and populates it from /etc/skel so \
 the user can log in immediately."

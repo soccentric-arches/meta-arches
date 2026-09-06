@@ -10,7 +10,11 @@
 #   /dev/mmcblk1p1  /boot      (FAT32 — kernel, DTBs, extlinux.conf)
 #   /dev/mmcblk1p2  rootfs-a   (ext4  — active  slot)
 #   /dev/mmcblk1p3  rootfs-b   (ext4  — standby slot)
-#   /dev/mmcblk1p4  /home      (ext4  — persistent home)
+#   /dev/mmcblk1p4  /pst       (ext4  — persistent instrumentation state)
+#   /dev/mmcblk1p5  /home      (ext4  — persistent home)
+#
+# Only p2/p3 matter below: /pst and /home are outside both slots and are
+# deliberately untouched by an update -- that is what makes them persistent.
 
 set -euo pipefail
 

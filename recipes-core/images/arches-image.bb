@@ -21,8 +21,18 @@ IMAGE_INSTALL:append = " \
 "
 
 # Persistent /home partition init — creates /home/arches on first boot after
-# the empty ext4 home partition (p4) is mounted over /home.
+# the empty ext4 home partition (p5) is mounted over /home.
 IMAGE_INSTALL:append = " arches-home-init"
+
+# Persistent instrumentation state — mounts /pst (p4, label "pst") and creates
+# its subdirectory tree with the ownership the instr-* daemons expect.
+#
+# This is not optional dressing: five instrumentation units declare
+# ReadWritePaths under /pst with ProtectSystem=strict, and systemd refuses to
+# start a unit whose ReadWritePaths entry does not exist. Without it
+# instr-istate -- the hub every spoke depends on -- fails at boot.
+# See Task.md D-03/D-04.
+IMAGE_INSTALL:append = " arches-pst"
 
 # Connectivity — Ethernet DHCP, WiFi (requires M.2 Key E WiFi card)
 IMAGE_INSTALL:append = " \

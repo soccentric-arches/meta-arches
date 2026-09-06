@@ -1,7 +1,7 @@
 #!/bin/bash
 # arches-home-init — runs once per boot until /home is populated.
 #
-# The /home partition (p4) is a large ext4 volume that persists across OTA
+# The /home partition (p5) is a large ext4 volume that persists across OTA
 # updates.  On the very first boot it is empty, so we need to re-create every
 # user's home directory that useradd put into the rootfs skeleton.
 #
@@ -18,9 +18,15 @@ fi
 
 logger -t arches-home-init "First boot: initialising /home partition."
 
-# ── Expand p4 (/home) to fill the rest of the SD card ───────────────────────
+# ── Expand p5 (/home) to fill the rest of the SD card ───────────────────────
 # The .wic image uses a 512 MB placeholder; here we grow it to 100% of the
-# physical media.  p4 is always the last partition so this is always safe.
+# physical media.  This is only safe because /home is always the LAST
+# partition -- resizepart 100% would otherwise eat whatever follows it.
+#
+# /pst was added at p4, deliberately BEFORE /home, to keep that true. If you
+# ever add another partition, it goes before /home too. PART_NUM is derived
+# from the running system rather than hardcoded, so the renumbering needs no
+# change here.
 HOME_DEV=$(findmnt -n -o SOURCE /home)
 DISK=$(lsblk -ndo PKNAME "/dev/${HOME_DEV##*/}" 2>/dev/null || echo "")
 if [[ -z "${DISK}" ]]; then
