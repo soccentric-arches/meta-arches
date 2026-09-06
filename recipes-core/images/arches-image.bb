@@ -13,6 +13,19 @@ IMAGE_INSTALL:append = " \
     ${@bb.utils.contains('ARCHES_SDK_SUPPORT', '1', 'packagegroup-arches-sdk', '', d)} \
 "
 
+# On-device management and observability (Arches-Instrumentation): the istate
+# hub and nine spokes, plus the ten *_ctrl operator tools. Gated on
+# ARCHES_INSTRUMENTATION so a board profile can drop it, matching the other
+# capability flags above.
+#
+# Everything it needs at runtime is in the base image: nftables,
+# wireguard-tools, hostapd, linuxptp and gpsd (Task.md D-06/D-07/D-12), and
+# /pst is partitioned, mounted and provisioned by arches-pst (D-03/D-04).
+# Without those this installs and then fails to start.
+IMAGE_INSTALL:append = " \
+    ${@bb.utils.contains('ARCHES_INSTRUMENTATION', '1', 'instrumentation', '', d)} \
+"
+
 # OTA via SWUpdate — A/B rootfs slot switching, web UI on :8080
 IMAGE_INSTALL:append = " \
     swupdate \
