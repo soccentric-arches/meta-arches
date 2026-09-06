@@ -70,10 +70,33 @@ IMAGE_INSTALL:append = " \
 "
 
 # --- Network client utilities + diagnostics (no second manager) -------------
+#
+# nftables, not iptables (Task.md D-06). Both on-device firewall
+# implementations program nftables and nothing in the fleet invokes iptables:
+#   - Arches-Instrumentation shells `nft -f` (lib/platform/src/native.cpp)
+#   - Arches-Configuration writes /etc/nftables.d/webconfig.nft
+# Shipping both backends on one device means two rule sets that cannot see
+# each other, which is a support problem rather than a convenience. The usual
+# reason to keep iptables is that docker RDEPENDS on it, but no container
+# runtime is installed in this image -- ARCHES_CONTAINERS is set in
+# kas/common.yaml and read by nothing in meta-arches -- so nothing pulls it
+# in. If a container runtime is ever added, it will bring iptables back
+# through its own RDEPENDS; it does not need to be listed here for that.
+#
+# wireguard-tools is here rather than in the domain variants: the HQ tunnel
+# and Configuration's VPN page both run `wg-quick up wg0` on every board, not
+# just on the aerospace/defense/networking ones (Task.md D-07).
+#
+# hostapd, linuxptp and gpsd back capabilities Instrumentation's networkd and
+# telemetry actually drive -- AP mode, PTP time sync and GNSS location. They
+# are named in the instrumentation recipe's RDEPENDS, so without them here the
+# package cannot be installed (Task.md D-12). gpsd in particular is what makes
+# a GNSS-sourced Location reportable at all.
 IMAGE_INSTALL:append = " \
     curl wget rsync lsof socat netcat-openbsd \
-    iproute2 iptables tcpdump nmap ethtool traceroute mtr ipcalc \
+    iproute2 nftables tcpdump nmap ethtool traceroute mtr ipcalc \
     net-tools iputils \
+    wireguard-tools hostapd linuxptp gpsd \
 "
 
 # --- Time sync, certs, crypto, entropy ---------------------------------------
