@@ -97,3 +97,6 @@ IMAGE_INSTALL:append = " \
 IMAGE_INSTALL:append = " \
     libgpiod i2c-tools spitools libiio \
 "
+
+# --- WebConfig (Arches-Configuration's meta-webconfig layer, kas/repos/arches-configuration.yaml) ---
+IMAGE_INSTALL:append = " webconfigd webconfig-static webconfig-schemas webconfig-manifest"
