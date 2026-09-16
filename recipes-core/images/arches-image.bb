@@ -45,6 +45,15 @@ IMAGE_INSTALL:append = " \
     sudo \
 "
 
+# --- WebConfig (Arches-Configuration's meta-webconfig layer, kas/repos/arches-configuration.yaml) ---
+# The default image target carries the wired WebConfig daemon. The sibling
+# install lives in arches-image-common.inc, but only the arches-image-<domain>
+# variants require that file — arches-image.bb does not, so without this the
+# packages make build was wired for (commit 5307dfa, kas/common.yaml's polkit
+# enable) never reached the default image (verified: the 2026-09-15 rootfs
+# manifest shipped zero webconfig entries).
+IMAGE_INSTALL:append = " webconfigd webconfig-static webconfig-schemas webconfig-manifest"
+
 # --- Hardware interface tools ------------------------------------------------
 
 # I2C
