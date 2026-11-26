@@ -3,9 +3,10 @@ DESCRIPTION = "The C++ hardware abstraction layer for the Jetson target, plus th
 generated protobuf/gRPC contract libraries (hal, hal.common, hal.modules.*) that \
 Arches-Client and Arches-Server consume. Also carries the STM32 co-processor link."
 HOMEPAGE = "https://github.com/soccentric-arches/Arches-HAL"
-LICENSE = "CLOSED"
+LICENSE = "MIT"
+LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-SRC_URI = "git://github.com/soccentric-arches/Arches-HAL.git;protocol=ssh;branch=develop"
+SRC_URI = "git://github.com/soccentric-arches/Arches-HAL.git;protocol=https;branch=develop"
 # Pinned rather than AUTOREV, for the same reason instrumentation.bb is: an
 # image with an OTA story must be reproducible from a tag (Task.md D-13).
 SRCREV = "d4387596156a833f1b190aa8989134bd70e07953"

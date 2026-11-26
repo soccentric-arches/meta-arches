@@ -3,9 +3,10 @@ DESCRIPTION = "Runs on the board under validation: drives hardware through the \
 Arches-HAL C++ API, spools results durably to SQLite, and streams them to \
 Arches-Server. Also serves HalService for the SDK/E2E path."
 HOMEPAGE = "https://github.com/soccentric-arches/Arches-Client"
-LICENSE = "CLOSED"
+LICENSE = "MIT"
+LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-SRC_URI = "git://github.com/soccentric-arches/Arches-Client.git;protocol=ssh;branch=develop"
+SRC_URI = "git://github.com/soccentric-arches/Arches-Client.git;protocol=https;branch=develop"
 SRCREV = "8814133df9f42728297f21f113bf68576870a196"
 PV = "1.0+git${SRCPV}"
 S = "${WORKDIR}/git"
