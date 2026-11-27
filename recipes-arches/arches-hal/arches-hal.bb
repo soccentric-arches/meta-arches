@@ -42,4 +42,10 @@ FILES:${PN} += "${datadir}/arches-hal"
 
 # Headers and the static archive are for building Arches-Client against, not
 # for the device.
-FILES:${PN}-dev += "${includedir}/arches_hal"
+FILES:${PN}-dev = "${includedir} ${libdir}/cmake ${libdir}/pkgconfig ${datadir}/cmake"
+
+# Upstream ships unversioned shared libraries that the client loads at runtime:
+# keep them in the main package rather than -dev (where dev-elf QA rejects a
+# non-symlink .so), and accept dev-so on the main package.
+FILES:${PN} += "${libdir}/*.so"
+INSANE_SKIP:${PN} += "dev-so"
