@@ -40,7 +40,6 @@ IMAGE_INSTALL:append = " \
 # OTA via SWUpdate — A/B rootfs slot switching, web UI on :8080
 IMAGE_INSTALL:append = " \
     swupdate \
-    swupdate-www \
     arches-swupdate-config \
 "
 
