@@ -10,7 +10,7 @@ require recipes-core/images/arches-image-common.inc
 # --- Aerospace & Avionics-specific packages (verified present in the included Yocto layers) ---
 IMAGE_INSTALL:append = " \
 	gpsd linuxptp ptpd can-utils python3-can \
-	strongswan openvpn wireguard-tools keepalived \
+	strongswan openvpn keepalived \
 	v4l-utils opencv gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
 	libiio fio stress-ng \
 "

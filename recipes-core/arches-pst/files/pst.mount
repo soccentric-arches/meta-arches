@@ -1,0 +1,30 @@
+[Unit]
+Description=Arches persistent instrumentation state (/pst)
+Documentation=file:///usr/share/doc/instrumentation/interface.md
+DefaultDependencies=no
+Before=local-fs.target
+After=blockdev@dev-disk-by\x2dlabel-pst.target
+
+# /pst is where the device remembers everything across an A/B update: system
+# configuration with its origins, alarm state, the spool, OTA staging and
+# local backups. It lives outside both rootfs slots for exactly that reason.
+#
+# Mounted by LABEL rather than by device node: the partition is p4 on the SD
+# and eMMC layouts and on NVMe, but the *device* differs per board
+# (mmcblk1/mmcblk0/nvme0n1) and a label works on all three without a
+# per-MACHINE unit.
+#
+# This is an explicit unit rather than an fstab line because nothing in this
+# image generates fstab -- see Task.md D-04.
+
+[Mount]
+What=/dev/disk/by-label/pst
+Where=/pst
+Type=ext4
+# nofail: a device whose /pst is missing or corrupt must still boot. REQ 6
+# is explicit that on a corrupt /pst the device should "boot unprovisioned and
+# report -- never fail to boot".
+Options=defaults,nofail,noatime,x-systemd.device-timeout=10s
+
+[Install]
+WantedBy=local-fs.target
