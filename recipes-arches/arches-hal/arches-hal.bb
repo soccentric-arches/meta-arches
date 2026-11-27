@@ -17,7 +17,12 @@ inherit cmake pkgconfig
 
 # HAL generates its own protobuf/gRPC sources at build time, so it needs the
 # compilers and plugins on the host as well as the runtimes on the target.
-DEPENDS = "grpc grpc-native protobuf protobuf-native"
+DEPENDS = "grpc grpc-native protobuf protobuf-native abseil-cpp"
+
+# The HAL compiles with -Werror and ignores write()/read() results in places;
+# gRPC exposes Abseil only transitively, so let the linker follow DT_NEEDED.
+CXXFLAGS:append = " -Wno-error=unused-result"
+LDFLAGS:append = " -Wl,--copy-dt-needed-entries"
 
 EXTRA_OECMAKE = " \
     -DCMAKE_BUILD_TYPE=Release \

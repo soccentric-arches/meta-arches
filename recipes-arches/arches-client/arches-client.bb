@@ -6,8 +6,15 @@ HOMEPAGE = "https://github.com/soccentric-arches/Arches-Client"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-SRC_URI = "git://github.com/soccentric-arches/Arches-Client.git;protocol=https;branch=develop"
-SRCREV = "8814133df9f42728297f21f113bf68576870a196"
+# Arches-Client's CMakeLists consumes Arches-HAL as ${CMAKE_SOURCE_DIR}/../Arches-HAL,
+# so the pinned HAL is fetched next to the client (same revision as arches-hal.bb).
+SRC_URI = " \
+    git://github.com/soccentric-arches/Arches-Client.git;protocol=https;branch=develop;name=client;destsuffix=git \
+    git://github.com/soccentric-arches/Arches-HAL.git;protocol=https;branch=develop;name=hal;destsuffix=Arches-HAL \
+"
+SRCREV_client = "8814133df9f42728297f21f113bf68576870a196"
+SRCREV_hal = "e1f7e711380d32fad54bbb5198ed3b58b2c17b3a"
+SRCREV_FORMAT = "client_hal"
 PV = "1.0+git${SRCPV}"
 S = "${WORKDIR}/git"
 
@@ -17,13 +24,19 @@ inherit cmake pkgconfig systemd
 # pre-built proto library rather than regenerating it -- that is the fleet's
 # ODR rule (see .claude/project_specs.md, "Dependency rules"). The recipe
 # therefore needs HAL's build tree, not just its runtime.
-DEPENDS = "arches-hal grpc grpc-native protobuf protobuf-native spdlog tomlplusplus yaml-cpp sqlite3"
+DEPENDS = "arches-hal abseil-cpp grpc grpc-native protobuf protobuf-native spdlog tomlplusplus yaml-cpp sqlite3"
 RDEPENDS:${PN} = "arches-hal"
 
 EXTRA_OECMAKE = " \
     -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_TESTS=OFF \
+    -DGRPC_CPP_PLUGIN=${STAGING_BINDIR_NATIVE}/grpc_cpp_plugin \
 "
+# The HAL compiles with -Werror and ignores write()/read() results in places;
+# gRPC exposes Abseil only transitively, so let the linker follow DT_NEEDED.
+CXXFLAGS:append = " -Wno-error=unused-result"
+LDFLAGS:append = " -Wl,--copy-dt-needed-entries"
+
 
 # The upstream CMakeLists installs the binary, conf/client.conf.sample (as
 # /etc/arches/client.conf) and systemd/arches-client.service, so
