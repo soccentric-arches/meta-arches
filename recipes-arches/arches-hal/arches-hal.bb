@@ -34,6 +34,10 @@ EXTRA_OECMAKE = " \
 # public headers, so cmake_do_install covers those. The module registry is
 # data the dispatch layer reads at runtime and is not part of those rules.
 do_install:append() {
+    # Arches-Client links this shared proto library at runtime; the upstream
+    # install rules do not ship it, so install it from the build tree.
+    install -d ${D}${libdir}
+    install -m 0755 ${B}/lib/libhal_protos_shared.so ${D}${libdir}/
     install -d ${D}${datadir}/arches-hal
     install -m 0644 ${S}/protos/registry/modules.yaml ${D}${datadir}/arches-hal/
 }
