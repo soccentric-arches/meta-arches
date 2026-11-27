@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 SRC_URI = "git://github.com/soccentric-arches/Arches-HAL.git;protocol=https;branch=develop"
 # Pinned rather than AUTOREV, for the same reason instrumentation.bb is: an
 # image with an OTA story must be reproducible from a tag (Task.md D-13).
-SRCREV = "d4387596156a833f1b190aa8989134bd70e07953"
+SRCREV = "e1f7e711380d32fad54bbb5198ed3b58b2c17b3a"
 PV = "1.0+git${SRCPV}"
 S = "${WORKDIR}/git"
 
@@ -22,6 +22,7 @@ DEPENDS = "grpc grpc-native protobuf protobuf-native"
 EXTRA_OECMAKE = " \
     -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_TESTING=OFF \
+    -DGRPC_CPP_PLUGIN=${STAGING_BINDIR_NATIVE}/grpc_cpp_plugin \
 "
 
 # The upstream CMakeLists already installs the aggregate libraries and the
